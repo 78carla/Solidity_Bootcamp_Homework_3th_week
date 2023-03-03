@@ -1,137 +1,68 @@
 import { ethers } from "hardhat";
 import { MyToken__factory } from "../typechain-types";
 
-const MINT_VALUE = ethers.utils.parseEther("100");
-const MINT_VALUE_2 = ethers.utils.parseEther("200");
+const MINT_VALUE = ethers.utils.parseEther("10");
 
-async function main() {
-  //Deploy the contract
-  const [deployer, account1, account2] = await ethers.getSigners();
-  const contractFactory = new MyToken__factory(deployer);
-  const contract = await contractFactory.deploy();
-  await contract.deployed();
-  const deployTransactionReceipt = await contract.deployTransaction.wait();
-  console.log(
-    "Contract deployed to:",
-    contract.address,
-    "by",
-    deployer.address,
-    "at block number",
-    deployTransactionReceipt.blockNumber,
-    "\n"
-  );
+async function main(){
+    const [deployer, account1, account2] = await ethers.getSigners();
 
-  //The deployer mint MINT_VALUE token for the account 1
-  const mintTx = await contract.mint(account1.address, MINT_VALUE);
-  const mintTransactionReceipt = await mintTx.wait();
-  console.log(
-    "Minted 100 tokens to",
-    account1.address,
-    "at block number",
-    mintTransactionReceipt.blockNumber
-  );
+    // deploy the contract
+    const contractFactory = new MyToken__factory(deployer);
+    const contract = await contractFactory.deploy();
+    const deployTxReceipt = await contract.deployTransaction.wait();
+    console.log(`Contract deployed at block ${deployTxReceipt.blockNumber}`);
+    // mint some tokens
+    const mintTx = await contract.mint(account1.address, MINT_VALUE);
+    const mintTxReceipt = await mintTx.wait();
+    console.log(`Tokens minted at block ${mintTxReceipt.blockNumber}`);
+    const tokenBalanceAccount1 = await contract.balanceOf(account1.address);
+    console.log(`Account balance is ${ethers.utils.formatEther(tokenBalanceAccount1)}`);
 
-  const tokenBalanceAccount1 = await contract.balanceOf(account1.address);
-  console.log(
-    "Account 1 has a balance of",
-    ethers.utils.formatEther(tokenBalanceAccount1),
-    "vote tokens!"
-  );
+    // check the voting power
+    let votePowerAccount1 = await contract.getVotes(account1.address);
+    console.log(`Account vote power is ${ethers.utils.formatEther(votePowerAccount1)}`)
 
-  //Check the voting power Account 1
-  const votePowerAccount1 = await contract.getVotes(account1.address);
-  console.log(
-    "Voting power of account 1 is",
-    ethers.utils.formatEther(votePowerAccount1)
-  );
+    // Self delegate
+    const delegateTx = await contract.connect(account1).delegate(account1.address);
+    const delegateTxReceipt = await delegateTx.wait();
+    console.log(`Tokens delegated at block ${delegateTxReceipt.blockNumber}`)
 
-  //Set the self-delegate of account 1
-  const delegateTx = await contract
-    .connect(account1)
-    .delegate(account1.address);
-  const delegateTxReceipt = await delegateTx.wait();
-  console.log(
-    "Token delegate to",
-    account1.address,
-    "at block number",
-    delegateTxReceipt.blockNumber
-  );
+    // check the voting power
+    votePowerAccount1 = await contract.getVotes(account1.address);
+    console.log(`Account vote power is ${ethers.utils.formatEther(votePowerAccount1)}`)
 
-  //Check the voting power Account 1
-  const votePowerAccount1AfterDelegate = await contract.getVotes(
-    account1.address
-  );
-  console.log(
-    "Account 1 voting power is",
-    ethers.utils.formatEther(votePowerAccount1AfterDelegate),
-    "\n"
-  );
+    // mint some moretokens
+    const mintTx2 = await contract.mint(account2.address, MINT_VALUE);
+    const mintTx2Receipt = await mintTx.wait();
+    console.log(`Tokens minted at block ${mintTxReceipt.blockNumber}`);
+    const tokenBalanceAccount2 = await contract.balanceOf(account2.address);
+    console.log(`Account balance is ${ethers.utils.formatEther(tokenBalanceAccount1)}`);
 
-  //What block am I on?
-  const blockNumber = await ethers.provider.getBlockNumber();
-  console.log("Block number:", blockNumber);
 
-  //Check the hystoric voting power of account 1
-  const votePowerAccount1Historic = await contract.getPastVotes(
-    account1.address,
-    blockNumber - 1
-  );
+    // whats the blocknr
+    const currentBlock = await ethers.provider.getBlock("latest");
+    console.log(`current blocknumber is ${currentBlock.number}`);
 
-  console.log(
-    "Account 1 voting power at block",
-    blockNumber - 1,
-    "is",
-    ethers.utils.formatEther(votePowerAccount1Historic)
-  );
+    // check the historical voting power
+    votePowerAccount1 = await contract.getPastVotes(account1.address, currentBlock.number-1);
+    console.log(`Account vote power was at block 3: ${ethers.utils.formatEther(votePowerAccount1)}`)
+    // check the historical voting power
+    votePowerAccount1 = await contract.getPastVotes(account1.address, currentBlock.number-2);
+    console.log(`Account vote power was at block 2: ${ethers.utils.formatEther(votePowerAccount1)}`)
 
-  //The deployer mint MINT_VALUE_2 token for the account 2
-  const mintTx2 = await contract.mint(account2.address, MINT_VALUE_2);
-  const mintTransactionReceipt2 = await mintTx2.wait();
-  console.log(
-    "Minted 200 tokens to",
-    account2.address,
-    "at block number",
-    mintTransactionReceipt2.blockNumber
-  );
+    // transfer tokens
 
-  const tokenBalanceAccount2 = await contract.balanceOf(account2.address);
-  console.log(
-    "Account 2 has a balance of",
-    ethers.utils.formatEther(tokenBalanceAccount2),
-    "vote tokens!"
-  );
+    // Self delegate
+    const delegateTx2 = await contract.connect(account1).delegate(account1.address);
+    const delegateTx2Receipt = await delegateTx.wait();
+    console.log(`Tokens delegated at block ${delegateTxReceipt.blockNumber}`)
 
-  //Check the voting power Account 2
-  const votePowerAccount2 = await contract.getVotes(account2.address);
-  console.log(
-    "Voting power of account 2 is",
-    ethers.utils.formatEther(votePowerAccount2)
-  );
+    // check voting power again
 
-  //Set the self-delegate of account 2
-  const delegateTx2 = await contract
-    .connect(account2)
-    .delegate(account2.address);
-  const delegateTxReceipt2 = await delegateTx.wait();
-  console.log(
-    "Token delegate to",
-    account2.address,
-    "at block number",
-    delegateTxReceipt.blockNumber
-  );
 
-  //Check the voting power Account 2
-  const votePowerAccount2AfterDelegate = await contract.getVotes(
-    account2.address
-  );
-  console.log(
-    "Account 2 voting power is",
-    ethers.utils.formatEther(votePowerAccount2AfterDelegate),
-    "\n"
-  );
 }
 
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+    console.log(error);
+    process.exitCode = 1;
+})
