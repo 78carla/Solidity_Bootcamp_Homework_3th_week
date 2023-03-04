@@ -11,12 +11,10 @@ contract Ballot {
         uint voteCount;
     }
 
+    mapping(address => uint256) public votingPowerSpent;
     uint256 public targetBlockNumber;
     IMyToken public tokenContract;
     Proposal[] public proposals;
-    uint256[] public votingPowerSpent; // TODO implement this in the rest of the code
-
-    // writing a test is good idea
 
     constructor(bytes32[] memory proposalNames, address _tokenContract, uint256 _targetBlockNumber) {
         tokenContract = IMyToken(_tokenContract);
@@ -28,16 +26,12 @@ contract Ballot {
 
     function vote(uint proposal, uint256 amount) external {
         require(votingPower(msg.sender) >= amount);
+        votingPowerSpent[msg.sender] += amount;
         proposals[proposal].voteCount += amount;
-        
-
-        //TODO 
-        // require condition msg.sender to have at least amount voting power
-        // account the voteCount for prososal of index proposal
     }
 
     function votingPower(address account) public view returns (uint256) {
-        return tokenContract.getPastVotes(account, targetBlockNumber);
+        return tokenContract.getPastVotes(account, targetBlockNumber) - votingPowerSpent[account];
     }
 
     function winningProposal() public view returns (uint winningProposal_) {
