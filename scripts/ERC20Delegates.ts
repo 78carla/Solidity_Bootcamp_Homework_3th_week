@@ -12,6 +12,8 @@ async function main() {
   const delegateAddress = args[3];
   const delegateValue = ethers.utils.parseEther(args[4]);
 
+  console.log(args.length);
+
   const provider = new ethers.providers.AlchemyProvider(
     "goerli",
     process.env.ALCHEMY_API_KEY
@@ -37,24 +39,34 @@ async function main() {
   const votePower = await contract.getVotes(signer.address);
   console.log("Voting power is", ethers.utils.formatEther(votePower));
 
-  const tokenBalanceAccount1 = await contract.balanceOf(signer.address);
+  const tokenBalanceAccount = await contract.balanceOf(signer.address);
   console.log(
     "The signer has a balance of",
-    ethers.utils.formatEther(tokenBalanceAccount1),
+    ethers.utils.formatEther(tokenBalanceAccount),
     "vote tokens!"
   );
 
-  //Set the self-delegate
-  const delegateTx = await contract.delegate(signer.address);
-  const delegateTxReceipt = await delegateTx.wait();
-  console.log(
-    "Token delegate to",
-    signer.address,
-    "at block number",
-    delegateTxReceipt.blockNumber
-  );
+  if (args.length === 3) {
+    //Set the self-delegate
+    const delegateTx = await contract.delegate(signer.address);
+    const delegateTxReceipt = await delegateTx.wait();
+    console.log(
+      "Token delegate to",
+      signer.address,
+      "at block number",
+      delegateTxReceipt.blockNumber
+    );
 
-  if (delegateTxReceipt.status == 0) {
+    //Check the voting power of the account
+    const votePowerAccountAfterDelegate = await contract.getVotes(
+      signer.address
+    );
+    console.log(
+      "Account voting power is",
+      ethers.utils.formatEther(votePowerAccountAfterDelegate),
+      "\n"
+    );
+  } else {
     //Delegate to delegateAddress
     const transferTx = await contract
       .connect(signer)
@@ -68,15 +80,17 @@ async function main() {
       "at block number",
       transferTxReceipt.blockNumber
     );
-  }
 
-  //Check the voting power
-  const votePowerAccountAfterDelegate = await contract.getVotes(signer.address);
-  console.log(
-    "Account voting power is",
-    ethers.utils.formatEther(votePowerAccountAfterDelegate),
-    "\n"
-  );
+    //Check the voting power of the delegate
+    const votePowerDelegateAfterDelegate = await contract.getVotes(
+      delegateAddress
+    );
+    console.log(
+      "Delegate voting power is",
+      ethers.utils.formatEther(votePowerDelegateAfterDelegate),
+      "\n"
+    );
+  }
 }
 
 main().catch((error) => {
