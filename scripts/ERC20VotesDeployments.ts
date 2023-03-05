@@ -6,15 +6,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-  const args = process.argv;
-  const account1 = args[2]; // replace with actual token address
-  //const account2 = [3];
-
   const provider = new ethers.providers.AlchemyProvider(
     "goerli",
     process.env.ALCHEMY_API_KEY
-  );
-  const privateKey = process.env.PRIVATE_KEY;
+  );  const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey || privateKey.length <= 0) {
     throw new Error("Private key missing");
   }
