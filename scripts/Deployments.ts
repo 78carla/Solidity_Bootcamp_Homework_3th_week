@@ -38,7 +38,7 @@ async function main() {
   const tokenContract = await tokenContractFactory.deploy();
   const tokenContractDeployTransactionReceipt = await tokenContract.deployTransaction.wait();
   console.log(
-    "Contract deployed to:",
+    "ERC20Votes contract deployed to:",
     tokenContract.address,
     "by",
     signer.address,
@@ -48,13 +48,13 @@ async function main() {
   );
 
   //Deploy the ballot contract
-  console.log("Deploying ERC20Votes contract:");
+  console.log("Deploying TokenizedBallot contract:");
   const ballotContractFactory = new Ballot__factory(signer)
   console.log("Deploying contract ...");
   const ballotContract = await ballotContractFactory.deploy(convertStringArrayToBytes32(proposals), tokenContract.address, tokenContractDeployTransactionReceipt.blockNumber);
   const ballotContractDeployTransactionReceipt = await ballotContract.deployTransaction.wait();
   console.log(
-    "Contract deployed to:",
+    "TokenizedBallot contract deployed to:",
     ballotContract.address,
     "by",
     signer.address,
