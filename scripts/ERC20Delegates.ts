@@ -9,10 +9,6 @@ dotenv.config();
 async function main() {
   const args = process.argv;
   const tokenAddress = args[2];
-  const delegateAddress = args[3];
-  const delegateValue = ethers.utils.parseEther(args[4]);
-
-  console.log(args.length);
 
   const provider = new ethers.providers.AlchemyProvider(
     "goerli",
@@ -68,11 +64,19 @@ async function main() {
     );
   } else {
     //Delegate to delegateAddress
+    const delegateAddress = args[3];
+    const delegateValue = ethers.utils.parseEther(args[4]);
     const transferTx = await contract
-      .connect(signer)
+      .connect(delegateAddress)
       .transfer(delegateAddress, delegateValue);
+
+    console.log(delegateAddress);
+    console.log(delegateValue);
+    console.log(transferTx);
+
     const transferTxReceipt = await transferTx.wait();
     console.log(
+      ethers.utils.formatEther(delegateValue),
       "Token transfered from",
       signer.address,
       "to",
@@ -81,13 +85,24 @@ async function main() {
       transferTxReceipt.blockNumber
     );
 
-    //Check the voting power of the delegate
-    const votePowerDelegateAfterDelegate = await contract.getVotes(
-      delegateAddress
+    const tokenBalanceDelegate = await contract
+      .connect(delegateAddress)
+      .balanceOf(delegateAddress);
+    console.log(
+      "Delegate",
+      delegateAddress,
+      "has a balance of",
+      ethers.utils.formatEther(tokenBalanceDelegate),
+      "vote tokens!"
     );
+
+    //Check the voting power of the delegate
+    const votePowerDelegate = await contract
+      .connect(delegateAddress)
+      .getVotes(delegateAddress);
     console.log(
       "Delegate voting power is",
-      ethers.utils.formatEther(votePowerDelegateAfterDelegate),
+      ethers.utils.formatEther(delegateAddress),
       "\n"
     );
   }
