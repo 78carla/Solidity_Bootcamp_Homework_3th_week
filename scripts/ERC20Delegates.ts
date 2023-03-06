@@ -9,8 +9,6 @@ dotenv.config();
 async function main() {
   const args = process.argv;
   const tokenAddress = args[2];
-  const delegateAddress = args[3];
-  const delegateValue = ethers.utils.parseEther(args[4]);
 
   const provider = new ethers.providers.AlchemyProvider(
     "goerli",
@@ -33,50 +31,87 @@ async function main() {
   const contract = await contractFactory.attach(tokenAddress);
   console.log("Successfully attached");
 
-  //Check the voting power
-  const votePower = await contract.getVotes(signer.address);
-  console.log("Voting power is", ethers.utils.formatEther(votePower));
+  if (args.length === 3) {
+    //Set the self-delegate
 
-  const tokenBalanceAccount1 = await contract.balanceOf(signer.address);
-  console.log(
-    "The signer has a balance of",
-    ethers.utils.formatEther(tokenBalanceAccount1),
-    "vote tokens!"
-  );
+    //Check the voting power
+    const votePowerAccount = await contract.getVotes(signer.address);
+    console.log("Voting power is", ethers.utils.formatEther(votePowerAccount));
 
-  //Set the self-delegate
-  const delegateTx = await contract.delegate(signer.address);
-  const delegateTxReceipt = await delegateTx.wait();
-  console.log(
-    "Token delegate to",
-    signer.address,
-    "at block number",
-    delegateTxReceipt.blockNumber
-  );
-
-  if (delegateTxReceipt.status == 0) {
-    //Delegate to delegateAddress
-    const transferTx = await contract
-      .connect(signer)
-      .transfer(delegateAddress, delegateValue);
-    const transferTxReceipt = await transferTx.wait();
+    const tokenBalanceAccount = await contract.balanceOf(signer.address);
     console.log(
-      "Token transfered from",
+      "The signer has a balance of",
+      ethers.utils.formatEther(tokenBalanceAccount),
+      "vote tokens!"
+    );
+
+    const delegateTxAccount = await contract.delegate(signer.address);
+    const delegateTxReceiptAccount = await delegateTxAccount.wait();
+    console.log(
+      "Token delegate to",
       signer.address,
-      "to",
+      "at block number",
+      delegateTxReceiptAccount.blockNumber
+    );
+
+    //Check the voting power of the account
+    const votePowerAccountAfterDelegate = await contract.getVotes(
+      signer.address
+    );
+    console.log(
+      "Account voting power is",
+      ethers.utils.formatEther(votePowerAccountAfterDelegate),
+      "\n"
+    );
+  } else {
+    //Delegate to delegateAddress
+    const delegateAddress = args[3];
+
+    const tokenBalanceDelegateBefore = await contract.balanceOf(
+      delegateAddress
+    );
+    console.log(
+      "Delegate",
+      delegateAddress,
+      "has a balance of",
+      ethers.utils.formatEther(tokenBalanceDelegateBefore),
+      "vote tokens!"
+    );
+
+    const votePowerDelegateBefore = await contract.getVotes(delegateAddress);
+    console.log(
+      "Delegate voting power is",
+      ethers.utils.formatEther(votePowerDelegateBefore),
+      "\n"
+    );
+
+    const delegateTxDelegate = await contract.delegate(delegateAddress);
+    const delegateTxReceiptDelegate = await delegateTxDelegate.wait();
+
+    console.log(
+      "Token delegate to",
       delegateAddress,
       "at block number",
-      transferTxReceipt.blockNumber
+      delegateTxReceiptDelegate.blockNumber
+    );
+
+    const tokenBalanceDelegateAfter = await contract.balanceOf(delegateAddress);
+    console.log(
+      "Delegate",
+      delegateAddress,
+      "has a balance of",
+      ethers.utils.formatEther(tokenBalanceDelegateAfter),
+      "vote tokens!"
+    );
+
+    //Check the voting power of the delegate
+    const votePowerDelegateAfter = await contract.getVotes(delegateAddress);
+    console.log(
+      "Delegate voting power is",
+      ethers.utils.formatEther(votePowerDelegateAfter),
+      "\n"
     );
   }
-
-  //Check the voting power
-  const votePowerAccountAfterDelegate = await contract.getVotes(signer.address);
-  console.log(
-    "Account voting power is",
-    ethers.utils.formatEther(votePowerAccountAfterDelegate),
-    "\n"
-  );
 }
 
 main().catch((error) => {
