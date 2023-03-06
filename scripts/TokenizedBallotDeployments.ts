@@ -34,7 +34,7 @@ async function main() {
   const signer = wallet.connect(provider);
 
   //Deploy the contract
-  console.log("Deploying ERC20Votes contract:");
+  console.log("Deploying TokenizedBallot contract:");
   const ballotContractFactory = new Ballot__factory(signer)
   console.log("Deploying contract ...");
   const ballotContract = await ballotContractFactory.deploy(convertStringArrayToBytes32(proposals), tokenContract, blockNumber);
