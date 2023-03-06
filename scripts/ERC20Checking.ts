@@ -40,7 +40,7 @@ async function main() {
   //Check the balance of the user
   const tokenBalanceAccount = await contract.balanceOf(accountVotingPower);
   console.log(
-    "The signer has a balance of",
+    "The user has a balance of",
     ethers.utils.formatEther(tokenBalanceAccount),
     "vote tokens at current block number",
     currentBlock
